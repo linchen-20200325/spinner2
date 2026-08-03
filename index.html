@@ -1,4 +1,4 @@
-<title>吃飯・飲品・點心轉轉樂</title>
+<title>轉轉樂 — 選擇障礙救星</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -30,6 +30,34 @@
     --accent-soft:#EEDFF4;
     --seg-hue:288;
     --seg-sat:46%;
+  }
+  :root[data-mode="play"]{
+    --accent:#3E7BE0;
+    --accent-deep:#295FB8;
+    --accent-soft:#DCE8FB;
+    --seg-hue:214;
+    --seg-sat:60%;
+  }
+  :root[data-mode="breakfast"]{
+    --accent:#E0912E;
+    --accent-deep:#B36E17;
+    --accent-soft:#FBEBD3;
+    --seg-hue:38;
+    --seg-sat:66%;
+  }
+  :root[data-mode="bored"]{
+    --accent:#6FA02E;
+    --accent-deep:#527A1C;
+    --accent-soft:#E7F1D6;
+    --seg-hue:92;
+    --seg-sat:48%;
+  }
+  :root[data-mode="dare"]{
+    --accent:#E0518A;
+    --accent-deep:#B83368;
+    --accent-soft:#FBDCE8;
+    --seg-hue:338;
+    --seg-sat:58%;
   }
   @media (prefers-color-scheme:dark){
     :root{
@@ -82,16 +110,17 @@
 
   /* mode tabs */
   .tabs{
-    display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--surface-2);
+    display:flex;flex-wrap:wrap;gap:6px;background:var(--surface-2);
     padding:6px;border-radius:18px;margin-bottom:26px;border:1px solid var(--line);
   }
   .tab{
     appearance:none;border:0;background:transparent;color:var(--ink-soft);
-    font:inherit;font-weight:700;font-size:15px;padding:12px 6px;border-radius:13px;
+    font:inherit;font-weight:700;font-size:14.5px;padding:11px 12px;border-radius:13px;
     cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+    flex:1 1 auto;white-space:nowrap;
     transition:color .2s,background .25s,box-shadow .25s;
   }
-  .tab .e{font-size:18px}
+  .tab .e{font-size:17px}
   .tab[aria-selected="true"]{
     background:var(--surface);color:var(--accent);
     box-shadow:0 6px 18px -10px color-mix(in srgb,var(--accent) 60%,transparent);
@@ -212,17 +241,7 @@
     </div>
   </header>
 
-  <div class="tabs" role="tablist" aria-label="選擇模式">
-    <button class="tab" id="tab-meal" role="tab" aria-selected="true" aria-controls="stage">
-      <span class="e">🍚</span>吃飯
-    </button>
-    <button class="tab" id="tab-drink" role="tab" aria-selected="false" aria-controls="stage">
-      <span class="e">🥤</span>飲品
-    </button>
-    <button class="tab" id="tab-snack" role="tab" aria-selected="false" aria-controls="stage">
-      <span class="e">🍰</span>點心
-    </button>
-  </div>
+  <div class="tabs" id="tabs" role="tablist" aria-label="選擇模式"></div>
 
   <div class="stage" id="stage">
     <div class="pointer"></div>
@@ -265,13 +284,26 @@
   var DEFAULTS = {
     meal:{emoji:"🍽️",lbl:"今天就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
     drink:{emoji:"🥤",lbl:"今天就喝",list:["珍珠奶茶","美式咖啡","拿鐵","綠茶","紅茶","檸檬水","多多綠","可樂","豆漿","冬瓜茶","氣泡水","奶蓋茶"]},
-    snack:{emoji:"🍰",lbl:"今天吃點心",list:["雞蛋糕","紅豆餅","布丁","蛋糕","甜甜圈","剉冰","豆花","巧克力","洋芋片","餅乾","冰淇淋","麵包"]}
+    snack:{emoji:"🍰",lbl:"今天吃點心",list:["雞蛋糕","紅豆餅","布丁","蛋糕","甜甜圈","剉冰","豆花","巧克力","洋芋片","餅乾","冰淇淋","麵包"]},
+    play:{emoji:"🗺️",lbl:"今天就去",list:["電影院","逛街","公園","海邊","唱歌","咖啡廳","逛夜市","爬山","看展覽","遊樂園","圖書館","打球"]},
+    breakfast:{emoji:"🍳",lbl:"早餐吃",list:["蛋餅","飯糰","三明治","漢堡","蘿蔔糕","燒餅油條","鐵板麵","厚片吐司","豆漿","清粥","貝果","水煎包"]},
+    bored:{emoji:"🎲",lbl:"無聊就來",list:["看電影","散步","打電動","看書","睡覺","畫畫","聽音樂","運動","打掃","追劇","拼圖","打給朋友"]},
+    dare:{emoji:"🎭",lbl:"你的挑戰",list:["說一個秘密","學動物叫3聲","唱一段歌","模仿一個人","講個冷笑話","說最近的糗事","比手畫腳","伏地挺身10下","裝可愛10秒","說一個願望","講最尷尬的事","打給一個朋友"]}
   };
   var root=document.documentElement;
   var canvas=document.getElementById("wheel");
   var ctx=canvas.getContext("2d");
+  var MODES=[
+    {k:"meal",e:"🍚",t:"吃飯"},
+    {k:"drink",e:"🥤",t:"飲品"},
+    {k:"snack",e:"🍰",t:"點心"},
+    {k:"play",e:"🗺️",t:"去哪玩"},
+    {k:"breakfast",e:"🍳",t:"早餐"},
+    {k:"bored",e:"🎲",t:"無聊"},
+    {k:"dare",e:"🎭",t:"真心話大冒險"}
+  ];
   var mode="meal";
-  var data={meal:load("meal"),drink:load("drink"),snack:load("snack")};
+  var data={};MODES.forEach(function(m){data[m.k]=load(m.k);});
   var rotation=0, spinning=false, muted=false, raf=null;
 
   function load(m){
@@ -454,19 +486,25 @@
   }
 
   // ---- mode switch ----
+  var tabsWrap=document.getElementById("tabs"),tabEls={};
+  MODES.forEach(function(m){
+    var b=document.createElement("button");
+    b.className="tab";b.type="button";
+    b.setAttribute("role","tab");b.setAttribute("aria-controls","stage");
+    b.setAttribute("aria-selected","false");
+    var e=document.createElement("span");e.className="e";e.textContent=m.e;
+    b.appendChild(e);b.appendChild(document.createTextNode(m.t));
+    b.addEventListener("click",function(){setMode(m.k);});
+    tabsWrap.appendChild(b);tabEls[m.k]=b;
+  });
   function setMode(m){
     mode=m;root.setAttribute("data-mode",m);
-    document.getElementById("tab-meal").setAttribute("aria-selected",m==="meal");
-    document.getElementById("tab-drink").setAttribute("aria-selected",m==="drink");
-    document.getElementById("tab-snack").setAttribute("aria-selected",m==="snack");
+    MODES.forEach(function(x){tabEls[x.k].setAttribute("aria-selected",x.k===m);});
     card.classList.remove("show");
     hint.textContent="按下中間的「轉！」開始";
     winEl.textContent="—";
     rotation=0;refresh();
   }
-  document.getElementById("tab-meal").addEventListener("click",function(){setMode("meal");});
-  document.getElementById("tab-drink").addEventListener("click",function(){setMode("drink");});
-  document.getElementById("tab-snack").addEventListener("click",function(){setMode("snack");});
 
   // ---- init ----
   window.addEventListener("resize",draw);
