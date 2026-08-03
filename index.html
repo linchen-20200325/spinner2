@@ -1,4 +1,4 @@
-<title>吃飯・飲品轉轉樂</title>
+<title>吃飯・飲品・點心轉轉樂</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -23,6 +23,13 @@
     --accent-soft:#D6F0E9;
     --seg-hue:168;
     --seg-sat:52%;
+  }
+  :root[data-mode="snack"]{
+    --accent:#B15AC8;
+    --accent-deep:#8B39A3;
+    --accent-soft:#EEDFF4;
+    --seg-hue:288;
+    --seg-sat:46%;
   }
   @media (prefers-color-scheme:dark){
     :root{
@@ -75,16 +82,16 @@
 
   /* mode tabs */
   .tabs{
-    display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface-2);
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--surface-2);
     padding:6px;border-radius:18px;margin-bottom:26px;border:1px solid var(--line);
   }
   .tab{
     appearance:none;border:0;background:transparent;color:var(--ink-soft);
-    font:inherit;font-weight:700;font-size:16px;padding:12px;border-radius:13px;
-    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    font:inherit;font-weight:700;font-size:15px;padding:12px 6px;border-radius:13px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
     transition:color .2s,background .25s,box-shadow .25s;
   }
-  .tab .e{font-size:19px}
+  .tab .e{font-size:18px}
   .tab[aria-selected="true"]{
     background:var(--surface);color:var(--accent);
     box-shadow:0 6px 18px -10px color-mix(in srgb,var(--accent) 60%,transparent);
@@ -207,10 +214,13 @@
 
   <div class="tabs" role="tablist" aria-label="選擇模式">
     <button class="tab" id="tab-meal" role="tab" aria-selected="true" aria-controls="stage">
-      <span class="e">🍚</span>吃飯轉轉樂
+      <span class="e">🍚</span>吃飯
     </button>
     <button class="tab" id="tab-drink" role="tab" aria-selected="false" aria-controls="stage">
-      <span class="e">🥤</span>飲品轉轉樂
+      <span class="e">🥤</span>飲品
+    </button>
+    <button class="tab" id="tab-snack" role="tab" aria-selected="false" aria-controls="stage">
+      <span class="e">🍰</span>點心
     </button>
   </div>
 
@@ -254,13 +264,14 @@
   "use strict";
   var DEFAULTS = {
     meal:{emoji:"🍽️",lbl:"今天就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
-    drink:{emoji:"🥤",lbl:"今天就喝",list:["珍珠奶茶","美式咖啡","拿鐵","綠茶","紅茶","檸檬水","多多綠","可樂","豆漿","冬瓜茶","氣泡水","奶蓋茶"]}
+    drink:{emoji:"🥤",lbl:"今天就喝",list:["珍珠奶茶","美式咖啡","拿鐵","綠茶","紅茶","檸檬水","多多綠","可樂","豆漿","冬瓜茶","氣泡水","奶蓋茶"]},
+    snack:{emoji:"🍰",lbl:"今天吃點心",list:["雞蛋糕","紅豆餅","布丁","蛋糕","甜甜圈","剉冰","豆花","巧克力","洋芋片","餅乾","冰淇淋","麵包"]}
   };
   var root=document.documentElement;
   var canvas=document.getElementById("wheel");
   var ctx=canvas.getContext("2d");
   var mode="meal";
-  var data={meal:load("meal"),drink:load("drink")};
+  var data={meal:load("meal"),drink:load("drink"),snack:load("snack")};
   var rotation=0, spinning=false, muted=false, raf=null;
 
   function load(m){
@@ -447,6 +458,7 @@
     mode=m;root.setAttribute("data-mode",m);
     document.getElementById("tab-meal").setAttribute("aria-selected",m==="meal");
     document.getElementById("tab-drink").setAttribute("aria-selected",m==="drink");
+    document.getElementById("tab-snack").setAttribute("aria-selected",m==="snack");
     card.classList.remove("show");
     hint.textContent="按下中間的「轉！」開始";
     winEl.textContent="—";
@@ -454,6 +466,7 @@
   }
   document.getElementById("tab-meal").addEventListener("click",function(){setMode("meal");});
   document.getElementById("tab-drink").addEventListener("click",function(){setMode("drink");});
+  document.getElementById("tab-snack").addEventListener("click",function(){setMode("snack");});
 
   // ---- init ----
   window.addEventListener("resize",draw);
