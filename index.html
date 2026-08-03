@@ -1,0 +1,469 @@
+<title>吃飯・飲品轉轉樂</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#FBF6EF;
+    --surface:#FFFFFF;
+    --surface-2:#F3ECE1;
+    --ink:#2A211C;
+    --ink-soft:#7A6E64;
+    --line:#E7DCCD;
+    --shadow:24px 30px 60px -30px rgba(60,40,25,.35);
+    /* per-mode accent, set on [data-mode] */
+    --accent:#EE5A3C;
+    --accent-deep:#C63C22;
+    --accent-soft:#FBE3DA;
+    --seg-hue:12;
+    --seg-sat:74%;
+    font-synthesis:none;
+  }
+  :root[data-mode="drink"]{
+    --accent:#1FA98F;
+    --accent-deep:#0F7E69;
+    --accent-soft:#D6F0E9;
+    --seg-hue:168;
+    --seg-sat:52%;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#1B1614;
+      --surface:#251E1A;
+      --surface-2:#2E251F;
+      --ink:#F4EBE1;
+      --ink-soft:#B29F90;
+      --line:#3A2F27;
+      --shadow:24px 30px 60px -28px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FBF6EF;--surface:#FFFFFF;--surface-2:#F3ECE1;--ink:#2A211C;--ink-soft:#7A6E64;--line:#E7DCCD;--shadow:24px 30px 60px -30px rgba(60,40,25,.35);
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1614;--surface:#251E1A;--surface-2:#2E251F;--ink:#F4EBE1;--ink-soft:#B29F90;--line:#3A2F27;--shadow:24px 30px 60px -28px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    min-height:100dvh;
+    transition:background .4s ease;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:clamp(18px,4vw,34px) 20px 60px}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .brand h1{
+    margin:0;font-size:clamp(24px,6vw,32px);font-weight:800;letter-spacing:-.02em;
+    text-wrap:balance;
+  }
+  .brand .sub{font-size:13px;color:var(--ink-soft);letter-spacing:.02em}
+  .icon-btn{
+    width:42px;height:42px;flex:0 0 auto;border:1px solid var(--line);border-radius:14px;
+    background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer;
+    display:grid;place-items:center;transition:transform .15s ease,border-color .2s;
+  }
+  .icon-btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .icon-btn:active{transform:translateY(0)}
+  .tools{display:flex;gap:10px}
+
+  /* mode tabs */
+  .tabs{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface-2);
+    padding:6px;border-radius:18px;margin-bottom:26px;border:1px solid var(--line);
+  }
+  .tab{
+    appearance:none;border:0;background:transparent;color:var(--ink-soft);
+    font:inherit;font-weight:700;font-size:16px;padding:12px;border-radius:13px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:color .2s,background .25s,box-shadow .25s;
+  }
+  .tab .e{font-size:19px}
+  .tab[aria-selected="true"]{
+    background:var(--surface);color:var(--accent);
+    box-shadow:0 6px 18px -10px color-mix(in srgb,var(--accent) 60%,transparent);
+  }
+
+  /* wheel */
+  .stage{position:relative;width:min(88vw,380px);margin:0 auto 8px;aspect-ratio:1}
+  .pointer{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:4;
+    width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;
+    border-top:26px solid var(--accent-deep);
+    filter:drop-shadow(0 4px 4px rgba(0,0,0,.28));
+  }
+  .pointer::after{
+    content:"";position:absolute;top:-30px;left:-7px;width:14px;height:14px;border-radius:50%;
+    background:var(--accent-deep);box-shadow:0 2px 4px rgba(0,0,0,.3);
+  }
+  canvas#wheel{
+    width:100%;height:100%;display:block;border-radius:50%;
+    box-shadow:var(--shadow), inset 0 0 0 8px var(--surface);
+    background:var(--surface);
+  }
+  .hub{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;
+    width:clamp(76px,22%,92px);aspect-ratio:1;border-radius:50%;cursor:pointer;
+    border:5px solid var(--surface);background:var(--accent);color:#fff;
+    font-weight:800;font-size:clamp(17px,4.8vw,20px);letter-spacing:.04em;
+    display:grid;place-items:center;
+    box-shadow:0 10px 22px -8px color-mix(in srgb,var(--accent) 70%,transparent);
+    transition:transform .15s ease,background .3s;
+  }
+  .hub:hover{transform:translate(-50%,-50%) scale(1.06)}
+  .hub:active{transform:translate(-50%,-50%) scale(.96)}
+  .hub:disabled{cursor:not-allowed;filter:grayscale(.4) opacity(.8)}
+  .hub:focus-visible{outline:3px solid var(--accent-deep);outline-offset:3px}
+
+  /* result */
+  .result{
+    min-height:88px;display:flex;align-items:center;justify-content:center;margin:16px auto 4px;
+  }
+  .card{
+    width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:16px;
+    box-shadow:0 20px 40px -26px rgba(60,40,25,.4);
+    opacity:0;transform:translateY(12px) scale(.98);transition:opacity .35s ease,transform .35s ease;
+  }
+  .card.show{opacity:1;transform:none}
+  .card .badge{
+    flex:0 0 auto;width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    font-size:28px;background:var(--accent-soft);
+  }
+  .card .txt{min-width:0}
+  .card .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .card .win{font-size:clamp(22px,6vw,28px);font-weight:800;color:var(--accent);line-height:1.2;word-break:break-word}
+  .card .again{
+    margin-left:auto;flex:0 0 auto;align-self:stretch;border:0;border-radius:12px;cursor:pointer;
+    background:var(--accent);color:#fff;font:inherit;font-weight:700;font-size:14px;padding:0 16px;
+    transition:filter .2s,transform .12s;
+  }
+  .card .again:hover{filter:brightness(1.06)}
+  .card .again:active{transform:scale(.96)}
+  .hint{text-align:center;color:var(--ink-soft);font-size:14px;margin:4px 0 0}
+
+  /* editor */
+  .editor{margin-top:30px}
+  .editor summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;
+    font-weight:700;font-size:15px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;
+    background:var(--surface);user-select:none;transition:border-color .2s;
+  }
+  .editor summary::-webkit-details-marker{display:none}
+  .editor summary:hover{border-color:var(--accent)}
+  .editor summary .count{margin-left:auto;color:var(--ink-soft);font-weight:600;font-size:13px}
+  .editor summary .chev{transition:transform .25s;color:var(--ink-soft)}
+  .editor[open] summary .chev{transform:rotate(180deg)}
+  .panel{padding:18px 4px 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:999px;padding:7px 8px 7px 14px;font-size:14px;font-weight:600;
+  }
+  .chip button{
+    width:20px;height:20px;border:0;border-radius:50%;cursor:pointer;line-height:1;font-size:13px;
+    background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent-deep);
+    display:grid;place-items:center;transition:background .2s;
+  }
+  .chip button:hover{background:var(--accent);color:#fff}
+  .addrow{display:flex;gap:8px;margin-bottom:14px}
+  .addrow input{
+    flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 14px;
+    font:inherit;font-size:15px;background:var(--bg);color:var(--ink);
+  }
+  .addrow input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+  .addrow button,.reset{
+    border:0;border-radius:12px;cursor:pointer;font:inherit;font-weight:700;padding:11px 16px;
+    background:var(--accent);color:#fff;font-size:15px;transition:filter .2s,transform .12s;flex:0 0 auto;
+  }
+  .addrow button:active,.reset:active{transform:scale(.96)}
+  .addrow button:hover,.reset:hover{filter:brightness(1.06)}
+  .reset{background:transparent;color:var(--ink-soft);border:1px solid var(--line);padding:9px 14px;font-size:13px}
+  .reset:hover{filter:none;border-color:var(--accent);color:var(--accent)}
+  footer{text-align:center;color:var(--ink-soft);font-size:12.5px;margin-top:40px;letter-spacing:.02em}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.001ms !important}
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>轉轉樂</h1>
+      <span class="sub">選擇障礙救星 · 交給命運決定</span>
+    </div>
+    <div class="tools">
+      <button class="icon-btn" id="mute" title="音效開關" aria-label="音效開關">🔊</button>
+      <button class="icon-btn" id="theme" title="切換深淺色" aria-label="切換深淺色">🌙</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="選擇模式">
+    <button class="tab" id="tab-meal" role="tab" aria-selected="true" aria-controls="stage">
+      <span class="e">🍚</span>吃飯轉轉樂
+    </button>
+    <button class="tab" id="tab-drink" role="tab" aria-selected="false" aria-controls="stage">
+      <span class="e">🥤</span>飲品轉轉樂
+    </button>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="760" height="760"></canvas>
+    <button class="hub" id="spin">轉！</button>
+  </div>
+
+  <div class="result"><div class="card" id="card" role="status" aria-live="polite">
+    <div class="badge" id="badge">🍽️</div>
+    <div class="txt">
+      <div class="lbl">今天就吃</div>
+      <div class="win" id="win">—</div>
+    </div>
+    <button class="again" id="again">再轉一次</button>
+  </div></div>
+  <p class="hint" id="hint">按下中間的「轉！」開始</p>
+
+  <details class="editor" id="editor">
+    <summary>
+      <span>✏️ 自訂選項</span>
+      <span class="count" id="count"></span>
+      <span class="chev">▾</span>
+    </summary>
+    <div class="panel">
+      <div class="chips" id="chips"></div>
+      <form class="addrow" id="addrow">
+        <input id="newopt" placeholder="新增一個選項…" maxlength="20" autocomplete="off">
+        <button type="submit">新增</button>
+      </form>
+      <button class="reset" id="reset">回復預設選項</button>
+    </div>
+  </details>
+
+  <footer>你的自訂選項會存在這台裝置的瀏覽器裡 · 隨時可改</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var DEFAULTS = {
+    meal:{emoji:"🍽️",lbl:"今天就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
+    drink:{emoji:"🥤",lbl:"今天就喝",list:["珍珠奶茶","美式咖啡","拿鐵","綠茶","紅茶","檸檬水","多多綠","可樂","豆漿","冬瓜茶","氣泡水","奶蓋茶"]}
+  };
+  var root=document.documentElement;
+  var canvas=document.getElementById("wheel");
+  var ctx=canvas.getContext("2d");
+  var mode="meal";
+  var data={meal:load("meal"),drink:load("drink")};
+  var rotation=0, spinning=false, muted=false, raf=null;
+
+  function load(m){
+    try{var s=localStorage.getItem("spinner:"+m);if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a;}}catch(e){}
+    return DEFAULTS[m].list.slice();
+  }
+  function save(){try{localStorage.setItem("spinner:"+mode,JSON.stringify(data[mode]));}catch(e){}}
+
+  // ---- theme ----
+  function preferDark(){return window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;}
+  var themeSet=null;
+  try{themeSet=localStorage.getItem("spinner:theme");}catch(e){}
+  function applyTheme(){
+    var dark = themeSet? themeSet==="dark" : preferDark();
+    if(themeSet) root.setAttribute("data-theme",themeSet);
+    document.getElementById("theme").textContent = dark? "☀️":"🌙";
+  }
+  document.getElementById("theme").addEventListener("click",function(){
+    var dark = themeSet? themeSet==="dark" : preferDark();
+    themeSet = dark? "light":"dark";
+    try{localStorage.setItem("spinner:theme",themeSet);}catch(e){}
+    applyTheme();draw();
+  });
+  applyTheme();
+
+  // ---- mute ----
+  try{muted=localStorage.getItem("spinner:mute")==="1";}catch(e){}
+  var muteBtn=document.getElementById("mute");
+  function renderMute(){muteBtn.textContent=muted?"🔇":"🔊";}
+  muteBtn.addEventListener("click",function(){muted=!muted;try{localStorage.setItem("spinner:mute",muted?"1":"0");}catch(e){}renderMute();});
+  renderMute();
+
+  // ---- audio tick ----
+  var actx=null;
+  function tick(){
+    if(muted)return;
+    try{
+      if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+      var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;
+      o.type="triangle";o.frequency.setValueAtTime(880,t);
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.005);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.06);
+      o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+.07);
+    }catch(e){}
+  }
+  function fanfare(){
+    if(muted)return;
+    try{
+      if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();
+      [523.25,659.25,783.99,1046.5].forEach(function(f,i){
+        var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+i*.09;
+        o.type="triangle";o.frequency.setValueAtTime(f,t);
+        g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.02);
+        g.gain.exponentialRampToValueAtTime(.0001,t+.3);
+        o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+.32);
+      });
+    }catch(e){}
+  }
+
+  // ---- colors ----
+  function cssvar(n){return getComputedStyle(root).getPropertyValue(n).trim();}
+  function segColor(i,n){
+    var hue=parseFloat(cssvar("--seg-hue"))||12;
+    var sat=cssvar("--seg-sat")||"70%";
+    var dark = themeSet? themeSet==="dark" : preferDark();
+    var spread=(i%2===0? -16:16) + (i/Math.max(n,1))*10 - 5;
+    var light = dark
+      ? (i%2===0? 40:33) + "%"
+      : (i%2===0? 70:62) + "%";
+    return "hsl("+(hue+spread)+","+sat+","+light+")";
+  }
+
+  // ---- draw ----
+  function draw(){
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var css=canvas.getBoundingClientRect().width||380;
+    var size=Math.round(css*dpr);
+    if(canvas.width!==size){canvas.width=size;canvas.height=size;}
+    var W=canvas.width,r=W/2,list=data[mode],n=list.length;
+    ctx.clearRect(0,0,W,W);
+    ctx.save();ctx.translate(r,r);ctx.rotate(rotation-Math.PI/2);
+    var seg=(Math.PI*2)/n;
+    var dark = themeSet? themeSet==="dark" : preferDark();
+    var txtCol = dark? "#F4EBE1" : "#2A211C";
+    for(var i=0;i<n;i++){
+      var a0=i*seg,a1=a0+seg;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r-2,a0,a1);ctx.closePath();
+      ctx.fillStyle=segColor(i,n);ctx.fill();
+      ctx.strokeStyle=cssvar("--surface");ctx.lineWidth=Math.max(2,W*.006);ctx.stroke();
+      // label
+      ctx.save();ctx.rotate(a0+seg/2);
+      ctx.fillStyle=txtCol;ctx.textAlign="right";ctx.textBaseline="middle";
+      var label=list[i];
+      var fs=Math.min(W*.052, W*.9/Math.max(4,label.length)/1.05);
+      fs=Math.max(fs, W*.03);
+      ctx.font="700 "+fs+"px 'PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif";
+      var maxw=r*0.62;
+      if(label.length>6){label=label.slice(0,6)+"…";}
+      ctx.fillText(label, r-Math.max(14,W*.05), 0, maxw);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // ---- spin ----
+  var card=document.getElementById("card"),winEl=document.getElementById("win"),
+      badge=document.getElementById("badge"),lblEl=card.querySelector(".lbl"),
+      hint=document.getElementById("hint"),hub=document.getElementById("spin");
+
+  function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+  function spin(){
+    var list=data[mode],n=list.length;
+    if(spinning||n<2)return;
+    spinning=true;hub.disabled=true;card.classList.remove("show");
+    hint.textContent="轉動中…命運正在決定";
+    if(actx&&actx.state==="suspended"){try{actx.resume();}catch(e){}}
+    var win=Math.floor(Math.random()*n);
+    var seg=(Math.PI*2)/n;
+    var base=((Math.PI*2)-((win+0.5)*seg))% (Math.PI*2);
+    var spins=5+Math.floor(Math.random()*3);
+    var start=rotation;
+    var delta=spins*Math.PI*2 + (((base-(start%(Math.PI*2)))%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+    var dur=reduce?300:4200;
+    var t0=performance.now(),lastSeg=-1;
+    function frame(now){
+      var p=Math.min((now-t0)/dur,1);
+      rotation=start+delta*easeOutCubic(p);
+      var cur=Math.floor((rotation/ (Math.PI*2))*n);
+      if(cur!==lastSeg){lastSeg=cur;if(p<0.985)tick();}
+      draw();
+      if(p<1){raf=requestAnimationFrame(frame);}else{finish(win);}
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  function finish(win){
+    spinning=false;hub.disabled=false;
+    var d=DEFAULTS[mode];
+    winEl.textContent=data[mode][win];
+    badge.textContent=d.emoji;lblEl.textContent=d.lbl;
+    card.classList.add("show");hint.textContent="不喜歡？再轉一次！";
+    fanfare();
+    if(navigator.vibrate)try{navigator.vibrate(30);}catch(e){}
+  }
+  hub.addEventListener("click",spin);
+  document.getElementById("again").addEventListener("click",spin);
+
+  // ---- editor ----
+  var chips=document.getElementById("chips"),count=document.getElementById("count");
+  function renderChips(){
+    chips.innerHTML="";
+    data[mode].forEach(function(name,idx){
+      var c=document.createElement("span");c.className="chip";
+      var t=document.createElement("span");t.textContent=name;c.appendChild(t);
+      var b=document.createElement("button");b.type="button";b.textContent="✕";
+      b.setAttribute("aria-label","移除 "+name);
+      b.addEventListener("click",function(){
+        if(data[mode].length<=2){hint.textContent="至少要保留 2 個選項喔";return;}
+        data[mode].splice(idx,1);save();refresh();
+      });
+      c.appendChild(b);chips.appendChild(c);
+    });
+    count.textContent=data[mode].length+" 個選項";
+  }
+  document.getElementById("addrow").addEventListener("submit",function(e){
+    e.preventDefault();
+    var inp=document.getElementById("newopt");var v=inp.value.trim();
+    if(!v)return;
+    if(data[mode].length>=20){hint.textContent="選項最多 20 個";return;}
+    if(data[mode].indexOf(v)>-1){inp.value="";return;}
+    data[mode].push(v);inp.value="";save();refresh();
+  });
+  document.getElementById("reset").addEventListener("click",function(){
+    data[mode]=DEFAULTS[mode].list.slice();save();refresh();
+  });
+
+  function refresh(){draw();renderChips();
+    var few=data[mode].length<2;
+    hub.disabled=few;if(few)hint.textContent="再新增一個選項才能開轉";
+  }
+
+  // ---- mode switch ----
+  function setMode(m){
+    mode=m;root.setAttribute("data-mode",m);
+    document.getElementById("tab-meal").setAttribute("aria-selected",m==="meal");
+    document.getElementById("tab-drink").setAttribute("aria-selected",m==="drink");
+    card.classList.remove("show");
+    hint.textContent="按下中間的「轉！」開始";
+    winEl.textContent="—";
+    rotation=0;refresh();
+  }
+  document.getElementById("tab-meal").addEventListener("click",function(){setMode("meal");});
+  document.getElementById("tab-drink").addEventListener("click",function(){setMode("drink");});
+
+  // ---- init ----
+  window.addEventListener("resize",draw);
+  if(window.matchMedia){
+    var mq=window.matchMedia("(prefers-color-scheme:dark)");
+    (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(function(){if(!themeSet){applyTheme();draw();}});
+  }
+  setMode("meal");
+  // ensure fonts settle then redraw crisp
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+  setTimeout(draw,60);
+})();
+</script>
