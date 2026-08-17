@@ -59,6 +59,13 @@
     --seg-hue:338;
     --seg-sat:58%;
   }
+  :root[data-mode="mealwe"]{
+    --accent:#CB4BA6;
+    --accent-deep:#A32F82;
+    --accent-soft:#F6DCEF;
+    --seg-hue:314;
+    --seg-sat:52%;
+  }
   @media (prefers-color-scheme:dark){
     :root{
       --bg:#1B1614;
@@ -282,7 +289,8 @@
 (function(){
   "use strict";
   var DEFAULTS = {
-    meal:{emoji:"🍽️",lbl:"今天就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
+    mealwk:{emoji:"🍚",lbl:"平日就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
+    mealwe:{emoji:"🍱",lbl:"假日就吃",list:["便當","牛肉麵","滷肉飯","火鍋","拉麵","壽司","鹹酥雞","水餃","炒飯","咖哩飯","義大利麵","早午餐"]},
     drink:{emoji:"🥤",lbl:"今天就喝",list:["珍珠奶茶","美式咖啡","拿鐵","綠茶","紅茶","檸檬水","多多綠","可樂","豆漿","冬瓜茶","氣泡水","奶蓋茶"]},
     snack:{emoji:"🍰",lbl:"今天吃點心",list:["雞蛋糕","紅豆餅","布丁","蛋糕","甜甜圈","剉冰","豆花","巧克力","洋芋片","餅乾","冰淇淋","麵包"]},
     play:{emoji:"🗺️",lbl:"今天就去",list:["電影院","逛街","公園","海邊","唱歌","咖啡廳","逛夜市","爬山","看展覽","遊樂園","圖書館","打球"]},
@@ -294,7 +302,8 @@
   var canvas=document.getElementById("wheel");
   var ctx=canvas.getContext("2d");
   var MODES=[
-    {k:"meal",e:"🍚",t:"吃飯"},
+    {k:"mealwk",e:"🍚",t:"平日吃"},
+    {k:"mealwe",e:"🍱",t:"假日吃"},
     {k:"drink",e:"🥤",t:"飲品"},
     {k:"snack",e:"🍰",t:"點心"},
     {k:"play",e:"🗺️",t:"去哪玩"},
@@ -302,12 +311,15 @@
     {k:"bored",e:"🎲",t:"無聊"},
     {k:"dare",e:"🎭",t:"真心話大冒險"}
   ];
-  var mode="meal";
+  var mode="mealwk";
   var data={};MODES.forEach(function(m){data[m.k]=load(m.k);});
   var rotation=0, spinning=false, muted=false, raf=null;
 
   function load(m){
     try{var s=localStorage.getItem("spinner:"+m);if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a;}}catch(e){}
+    if(m==="mealwk"){ // 沿用舊「吃飯」自訂清單當平日的起始值
+      try{var o=localStorage.getItem("spinner:meal");if(o){var b=JSON.parse(o);if(Array.isArray(b)&&b.length)return b;}}catch(e){}
+    }
     return DEFAULTS[m].list.slice();
   }
   function save(){try{localStorage.setItem("spinner:"+mode,JSON.stringify(data[mode]));}catch(e){}}
@@ -512,7 +524,7 @@
     var mq=window.matchMedia("(prefers-color-scheme:dark)");
     (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(function(){if(!themeSet){applyTheme();draw();}});
   }
-  setMode("meal");
+  setMode("mealwk");
   // ensure fonts settle then redraw crisp
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
   setTimeout(draw,60);
